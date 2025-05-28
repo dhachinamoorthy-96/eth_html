@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ethereum Wallet Scanner</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #eee;
+      text-align: center;
+      padding: 2rem;
+    }
+    button {
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    pre {
+      text-align: left;
+      background-color: #222;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 2rem;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Ethereum Wallet Scanner</h1>
+  <p>Generate random Ethereum wallets and check their balance.</p>
+  <button id="generateBtn" onclick="scan()">Generate & Check</button>
+  <pre id="output">Click the button to begin...</pre>
+
+
+   <script>
+    const apiKey = 'MBUAPYKYTFHC8S1GPUQQCI1PRJXH1P5FKP'; // 🔑 Replace with your Etherscan API key
+
+    let intervalId;
+
+    async function scan() {
+      const wallet = ethers.Wallet.createRandom();
+      const address = wallet.address;
+      const privateKey = wallet.privateKey;
+
+      const url = `https://api.etherscan.io/api?module=account&action=balance&address=${address}&tag=latest&apikey=${apiKey}`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        const balance = ethers.utils.formatEther(data.result);
+        const output = `🪪 Address: ${address}\n🔑 Private Key: ${privateKey}\n💰 Balance: ${balance} ETH`;
+
+        document.getElementById('output').textContent = output;
+
+        if (parseFloat(balance) > 0) {
+          alert("🎉 Found wallet with non-zero balance!");
+          clearInterval(intervalId);  // Stop the interval after finding a non-zero balance
+        }
+
+      } catch (error) {
+        document.getElementById('output').textContent = `❌ Error: ${error}`;
+      }
+    }
+
+    window.onload = () => {
+      intervalId = setInterval(scan, 800); // every 800ms
+    };
+</script>
+
+
+  
+</body>
+</html>
