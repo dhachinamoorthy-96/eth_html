@@ -32,52 +32,63 @@
       margin-top: 2rem;
       overflow-x: auto;
     }
+    #counter {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      color: #0f0;
+    }
   </style>
 </head>
 <body>
   <h1>Ethereum Wallet Scanner</h1>
   <p>Generate random Ethereum wallets and check their balance.</p>
   <button id="generateBtn" onclick="scan()">Generate & Check</button>
+
+  <!-- Counter block -->
+  <div id="counter">Wallets Scanned: 0</div>
+
   <pre id="output">Click the button to begin...</pre>
 
+ <script>
+  const apiKey = 'MBUAPYKYTFHC8S1GPUQQCI1PRJXH1P5FKP'; // Your API key
 
-   <script>
-    const apiKey = 'MBUAPYKYTFHC8S1GPUQQCI1PRJXH1P5FKP'; // 🔑 Replace with your Etherscan API key
+  let intervalId;
+  let scannedCount = 0;
 
-    let intervalId;
+  async function scan() {
+    const wallet = ethers.Wallet.createRandom();
+    const address = wallet.address;
+    const privateKey = wallet.privateKey;
 
-    async function scan() {
-      const wallet = ethers.Wallet.createRandom();
-      const address = wallet.address;
-      const privateKey = wallet.privateKey;
+    const url = `https://api.etherscan.io/api?module=account&action=balance&address=${address}&tag=latest&apikey=${apiKey}`;
 
-      const url = `https://api.etherscan.io/api?module=account&action=balance&address=${address}&tag=latest&apikey=${apiKey}`;
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
 
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
+      // Only count it as scanned after API fetch
+      scannedCount++;
+      document.getElementById('counter').textContent = `Wallets Scanned: ${scannedCount}`;
 
-        const balance = ethers.utils.formatEther(data.result);
-        const output = `🪪 Address: ${address}\n🔑 Private Key: ${privateKey}\n💰 Balance: ${balance} ETH`;
+      const balance = ethers.utils.formatEther(data.result);
+      const output = `🪪 Address: ${address}\n🔑 Private Key: ${privateKey}\n💰 Balance: ${balance} ETH`;
 
-        document.getElementById('output').textContent = output;
+      document.getElementById('output').textContent = output;
 
-        if (parseFloat(balance) > 0) {
-          alert("🎉 Found wallet with non-zero balance!");
-          clearInterval(intervalId);  // Stop the interval after finding a non-zero balance
-        }
-
-      } catch (error) {
-        document.getElementById('output').textContent = `❌ Error: ${error}`;
+      if (parseFloat(balance) > 0) {
+        alert("🎉 Found wallet with non-zero balance!");
+        clearInterval(intervalId); // Stop scanning
       }
-    }
 
-    window.onload = () => {
-      intervalId = setInterval(scan, 800); // every 800ms
-    };
+    } catch (error) {
+      document.getElementById('output').textContent = `❌ Error: ${error}`;
+    }
+  }
+
+  window.onload = () => {
+    intervalId = setInterval(scan, 800); // scan every 800ms
+  };
 </script>
 
-
-  
 </body>
 </html>
